@@ -12,7 +12,6 @@ import MapKit
 
 class InformationPostingViewController: UIViewController, UITextFieldDelegate  {
     
-    var user: StudentInforamion?
     let parse = Parse()
     
     let udacityBlue = UIColor(red: 22/220, green: 164/220, blue: 1.0, alpha: 1.0)
@@ -79,22 +78,26 @@ class InformationPostingViewController: UIViewController, UITextFieldDelegate  {
             
         } else {
             let params = [
-                "uniqueKey" : user!.key!,
-                "firstName" : user!.firstName!,
-                "lastName"  : user!.lastName!,
+                "uniqueKey" : StudentData.key!,
+                "firstName" : StudentData.firstName!,
+                "lastName"  : StudentData.lastName!,
                 "mapString" : self.locaitonTextField.text!,
                 "mediaURL"  : self.urlTextField.text!,
                 "latitude"  : userLocation!.coordinate.latitude,
                 "longitude" : userLocation!.coordinate.longitude
             ]
             self.spinner.startAnimating()
-            parse.postLocation(params as! [String : AnyObject]) {
+            parse.postLocation(params as! [String : AnyObject], errorHandler: errorCompletionHandler) {
                 performUIUpdatesOnMain {
                     self.spinner.stopAnimating()
                     self.dismissViewControllerAnimated(true, completion: nil)
                 }
             }
         }
+    }
+    
+    func errorCompletionHandler() {
+        spinner.stopAnimating()
     }
     
     @IBAction func textFieldBeganEditing(sender: UITextField) {

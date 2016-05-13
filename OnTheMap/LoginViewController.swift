@@ -10,27 +10,32 @@ import UIKit
 
 class LoginViewController: UIViewController, UITextFieldDelegate {
 
-    @IBOutlet weak var emailTextField: UITextField!
-    @IBOutlet weak var passwordTextField: UITextField!
-    @IBOutlet weak var scrollView: UIScrollView!
-    @IBOutlet weak var loginButton: UIButton!
+
+    @IBOutlet var emailTextField: LoginTextField!
+    @IBOutlet var passwordTextField: LoginTextField!
+    @IBOutlet var loginButton: UIButton!
+    @IBOutlet var scrollView: UIScrollView!
     
-    var user = StudentInforamion()
+    
     let udacity = Udacity()
     var keyboardPresent = false
     var activeField: UITextField?
     
     @IBAction func loginTapped(sender: UIButton) {
+        setUIEnabled(false)
+        let errorHandler = {
+            self.setUIEnabled(true)
+        }
+        
         if emailTextField.text!.isEmpty || passwordTextField.text!.isEmpty {
             displayAlert("Please enter a valid username and password")
         } else {
-            setUIEnabled(false)
-            udacity.getSession(emailTextField.text!, password: passwordTextField.text!) {
+            udacity.getSession(emailTextField.text!, password: passwordTextField.text!, errorHandler: errorHandler) {
                 (key: String, firstName: String, lastName: String, username: String) -> Void in
-                self.user.key = key
-                self.user.firstName = firstName
-                self.user.login = username
-                self.user.lastName = lastName
+                StudentData.key = key
+                StudentData.firstName = firstName
+                StudentData.login = username
+                StudentData.lastName = lastName
                 
                 self.completeLogin()
             }
@@ -39,12 +44,10 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        self.hideKeyboardWhenTappedAround()
         setUIEnabled(true)
         emailTextField.delegate = self
         passwordTextField.delegate = self
-        
-//        emailTextField.text = "nick@nicksemail.com"
-//        passwordTextField.text = "Na0coC77"
     }
 
     override func didReceiveMemoryWarning() {
@@ -54,6 +57,7 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
 
     override func viewWillAppear(animated: Bool) {
         registerForKeyboardNotifications()
+        print("ViewWillAppear Called")
         self.setUIEnabled(true)
     }
     
@@ -62,19 +66,12 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
         deregisterFromKeyboardNotifications()
     }
     
-    func displayAlert(alertMessage: String) {
-        let alertController = UIAlertController(title: "Error", message: alertMessage, preferredStyle: UIAlertControllerStyle.Alert)
-        alertController.addAction(UIAlertAction(title: "Dismiss", style: UIAlertActionStyle.Default, handler: nil ))
-        self.presentViewController(alertController, animated: true, completion: nil)
-    }
-    
-    override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
-        if segue.identifier == "TabBarControllerSegue" {
-            let nextScene =  segue.destinationViewController as! UITabBarController
-            let mapNavViewController = nextScene.viewControllers![0] as! UINavigationController
-            let mapVC = mapNavViewController.viewControllers[0] as! MapViewController
-            mapVC.user = user
-        }
+    override func displayAlert(alertMessage: String) {
+        let alertController = DBAlertController(title: "Error", message: alertMessage, preferredStyle: UIAlertControllerStyle.Alert)
+        alertController.addAction(UIAlertAction(title: "Dismiss", style: UIAlertActionStyle.Default) {
+            (action) in self.setUIEnabled(true)
+            })
+        alertController.show()
     }
     
     private func completeLogin() {
@@ -91,8 +88,8 @@ extension LoginViewController {
     
     func registerForKeyboardNotifications() {
         //Adding notifies on keyboard appearing
-        NSNotificationCenter.defaultCenter().addObserver(self, selector: "keyboardWasShown:", name: UIKeyboardWillShowNotification, object: nil)
-        NSNotificationCenter.defaultCenter().addObserver(self, selector: "keyboardWillBeHidden:", name: UIKeyboardWillHideNotification, object: nil)
+        NSNotificationCenter.defaultCenter().addObserver(self, selector: #selector(LoginViewController.keyboardWasShown(_:)), name: UIKeyboardWillShowNotification, object: nil)
+        NSNotificationCenter.defaultCenter().addObserver(self, selector: #selector(LoginViewController.keyboardWillBeHidden(_:)), name: UIKeyboardWillHideNotification, object: nil)
     }
     
     
@@ -131,7 +128,7 @@ extension LoginViewController {
         let contentInsets : UIEdgeInsets = UIEdgeInsetsMake(0.0, 0.0, -keyboardSize!.height - 10.0, 0.0)
         self.scrollView.contentInset = contentInsets
         self.scrollView.scrollIndicatorInsets = contentInsets
-        self.view.endEditing(true)
+        self.activeField?.resignFirstResponder()
         self.scrollView.scrollEnabled = false
     }
     
@@ -145,18 +142,23 @@ extension LoginViewController {
     }
     
     func textFieldShouldReturn(textField: UITextField) -> Bool {
-        view.endEditing(true)
-        return false
+        textField.resignFirstResponder()
+        if textField.isEqual(passwordTextField) {
+            self.loginTapped(loginButton)
+            return true
+        } else {
+            return false
+        }
+        
     }
     
-    override func touchesBegan(touches: Set<UITouch>, withEvent event: UIEvent?) {
-        view.endEditing(true)
-    }
     
     private func setUIEnabled(enabled: Bool) {
-        emailTextField.enabled = enabled
+        emailTextField.userInteractionEnabled = enabled
+        //emailTextField.enabled = enabled
         print("emailTextField.enabled = \(emailTextField.enabled)")
-        passwordTextField.enabled = enabled
+        passwordTextField.userInteractionEnabled = enabled
+        //passwordTextField.enabled = enabled
         print("passwordTextField.enabled = \(passwordTextField.enabled)")
         loginButton?.enabled = enabled
      
@@ -167,8 +169,24 @@ extension LoginViewController {
             loginButton?.alpha = 0.5
         }
     }
+}
+
+extension UIViewController {
     
+    func displayAlert(alertMessage: String) {
+        let alertController = DBAlertController(title: "Error", message: alertMessage, preferredStyle: UIAlertControllerStyle.Alert)
+        alertController.addAction(UIAlertAction(title: "Dismiss", style: UIAlertActionStyle.Default, handler: nil ))
+        alertController.show()
+    }
     
+    func hideKeyboardWhenTappedAround() {
+        let tap: UITapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(UIViewController.dismissKeyboard))
+        view.addGestureRecognizer(tap)
+    }
+    
+    func dismissKeyboard() {
+        view.endEditing(true)
+    }
 }
 
 

@@ -12,19 +12,19 @@ import MapKit
 
 class Parse: NSObject {
 
-    func getStudentLocations(completionHandler handler: ([Location], [MKPointAnnotation]) -> Void) {
-        let request = NSMutableURLRequest(URL: NSURL(string: ParseConstants.ParseURL.BaseURL)!)
+    func getStudentLocations(errorHandler: (Void) -> Void, completionHandler handler: ([StudentInformation], [MKPointAnnotation]) -> Void) {
+        let request = NSMutableURLRequest(URL: NSURL(string: "\(ParseConstants.ParseURL.BaseURL)?\(ParseConstants.MethodsKeys.Order.baseMethod)=\(ParseConstants.MethodsKeys.Order.option)")!)
         request.addValue(ParseConstants.Values.ApplicationID, forHTTPHeaderField: ParseConstants.Keys.ApplicationID)
         request.addValue(ParseConstants.Values.RestAPIKey, forHTTPHeaderField: ParseConstants.Keys.RestAPIKey)
         let session = NSURLSession.sharedSession()
         let task = session.dataTaskWithRequest(request) { data, response, error in
             if error != nil { // Handle error...
-                self.displayAlert("There was an error with your request")
+                self.displayAlert((error?.localizedDescription)!, completionHandler: errorHandler)
                 print(error)
                 return
             }
             guard let data = data else {
-                self.displayAlert("There was an error with your request")
+                self.displayAlert("There was an error with your request", completionHandler: errorHandler)
                 return
             }
             
@@ -32,19 +32,19 @@ class Parse: NSObject {
             do {
                 parsedResult = try NSJSONSerialization.JSONObjectWithData(data, options: .AllowFragments)
             } catch {
-                self.displayAlert("Could not parse data's JSON")
+                self.displayAlert("Could not parse data's JSON", completionHandler: errorHandler)
                 return
             }
             
             guard let results = parsedResult["results"] as? [[String:AnyObject]] else {
-                self.displayAlert("Could not find \"results\" in parsedResults")
+                self.displayAlert("Could not find \"results\" in parsedResults", completionHandler: errorHandler)
                 print("Results: \(parsedResult)")
                 return
             }
             
             
             dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0)){
-                let locations = Location.locationsFromResults(results)
+                let locations = StudentInformation.locationsFromResults(results)
                 self.setAnnotations(locations, completionHandler: handler)
             }
             
@@ -52,15 +52,15 @@ class Parse: NSObject {
         task.resume()
     }
     
-    func setAnnotations(locations: [Location], completionHandler handler: ([Location], [MKPointAnnotation]) -> Void ) {
+    func setAnnotations(locations: [StudentInformation], completionHandler handler: ([StudentInformation], [MKPointAnnotation]) -> Void ) {
         dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0)){
-            let annotations = Location.annotaionsFromLocations(locations)
+            let annotations = StudentInformation.annotaionsFromLocations(locations)
     
             handler(locations, annotations)
         }
     }
     
-    func logout(completionHandler handler: (Void) -> Void) {
+    func logout(errorHandler: (Void) -> Void, completionHandler handler: (Void) -> Void) {
         let request = NSMutableURLRequest(URL: NSURL(string: UdacityConstants().buildSessionURL())!)
         request.HTTPMethod = "DELETE"
         var xsrfCookie: NSHTTPCookie? = nil
@@ -74,12 +74,12 @@ class Parse: NSObject {
         let session = NSURLSession.sharedSession()
         let task = session.dataTaskWithRequest(request) { data, response, error in
             if error != nil { // Handle error…
-                self.displayAlert("There was an error with your request")
+                self.displayAlert((error?.localizedDescription)!, completionHandler: errorHandler)
                 return
             }
             
             guard let newData = data?.subdataWithRange(NSMakeRange(5, data!.length - 5)) /* subset response data! */ else {
-                self.displayAlert("There was an error with your request")
+                self.displayAlert("There was an error with your request", completionHandler: errorHandler)
                 return
             }
             
@@ -88,7 +88,7 @@ class Parse: NSObject {
             do {
                 _ = try NSJSONSerialization.JSONObjectWithData(newData, options: .AllowFragments)
             } catch {
-                self.displayAlert("Could not parse JSON data")
+                self.displayAlert("Could not parse JSON data", completionHandler: errorHandler)
                 return
             }
             
@@ -100,7 +100,7 @@ class Parse: NSObject {
         task.resume()
     }
     
-    func postLocation(params: [String:AnyObject], completionHandler handler: Void -> Void) {
+    func postLocation(params: [String:AnyObject], errorHandler: (Void) -> Void, completionHandler handler: Void -> Void) {
         let request = NSMutableURLRequest(URL: NSURL(string: ParseConstants.ParseURL.BaseURL)!)
         request.HTTPMethod = "POST"
         request.addValue(ParseConstants.Values.ApplicationID, forHTTPHeaderField: ParseConstants.Keys.ApplicationID)
@@ -110,14 +110,14 @@ class Parse: NSObject {
         do {
             request.HTTPBody = try NSJSONSerialization.dataWithJSONObject(params, options: .PrettyPrinted)
         } catch {
-            self.displayAlert("There was an error Serializing the JSON data")
+            self.displayAlert("There was an error Serializing the JSON data", completionHandler: errorHandler)
             return
         }
         
         let session = NSURLSession.sharedSession()
         let task = session.dataTaskWithRequest(request) { data, response, error in
             if error != nil { // Handle error…
-                self.displayAlert("There was an error with your request")
+                self.displayAlert("There was an error with your request", completionHandler: errorHandler)
                 return
             }
             //print(NSString(data: data!, encoding: NSUTF8StringEncoding))
@@ -129,11 +129,13 @@ class Parse: NSObject {
 
     }
     
-    func displayAlert(alertMessage: String) {
+    func displayAlert(alertMessage: String, completionHandler handler: (Void) -> Void) {
         performUIUpdatesOnMain {
-            let alertController = UIAlertController(title: "Error", message: alertMessage, preferredStyle: UIAlertControllerStyle.Alert)
-            alertController.addAction(UIAlertAction(title: "Dismiss", style: UIAlertActionStyle.Default, handler: nil ))
-            UIApplication.sharedApplication().keyWindow?.rootViewController!.presentViewController(alertController, animated: true, completion: nil)
+            let alertController = DBAlertController(title: "Error", message: alertMessage, preferredStyle: UIAlertControllerStyle.Alert)
+            alertController.addAction(UIAlertAction(title: "Dismiss", style: UIAlertActionStyle.Default) {
+                (action) in handler()
+                })
+            alertController.show()
         }
     }
 }
@@ -149,6 +151,7 @@ struct ParseConstants {
         static let Skip = "skip"
         struct Order {
             static let baseMethod = "order"
+            static let option = "-updatedAt"
         }
     }
     
@@ -167,7 +170,7 @@ struct ParseConstants {
         static let ApplicationID = "X-Parse-Application-Id"
         static let RestAPIKey = "X-Parse-REST-API-Key"
     }
-    
+    //QuWThTdiRmTux3YaDseUSEpUKo7aBYM737yKd4gY
     struct Values {
         static let ApplicationID = "QrX47CA9cyuGewLdsL7o5Eb8iug6Em8ye0dnAbIr"
         static let RestAPIKey = "QuWThTdiRmTux3YaDseUSEpUKo7aBYM737yKd4gY"

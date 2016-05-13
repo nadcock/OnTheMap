@@ -12,7 +12,6 @@ import MapKit
 
 class MapViewController: UIViewController, MKMapViewDelegate {
     
-    var user: StudentInforamion?
     let parse = Parse()
     
     @IBOutlet weak var mapView: MKMapView!
@@ -25,12 +24,16 @@ class MapViewController: UIViewController, MKMapViewDelegate {
         self.spinner.hidesWhenStopped = true
         self.spinner.startAnimating()
         mapView.delegate = self
+        
+    }
+    
+    override func viewWillAppear(animated: Bool) {
         updateMap()
     }
     
     
     @IBAction func logoutTapped(sender: AnyObject) {
-        parse.logout(){
+        parse.logout({}){
             performUIUpdatesOnMain {
                 let controller = self.storyboard!.instantiateViewControllerWithIdentifier("LoginViewController")
                 self.presentViewController(controller, animated: true, completion: nil)
@@ -40,40 +43,33 @@ class MapViewController: UIViewController, MKMapViewDelegate {
     
     @IBAction func refresh(sender: UIBarButtonItem) {
         self.spinner.startAnimating()
-        mapView.removeAnnotations(self.user!.annotations!)
+        if let annotations = StudentData.annotations {
+            self.mapView.removeAnnotations((annotations))
+        }
         updateMap()
     }
     
+    
     func updateMap() {
-        parse.getStudentLocations() { locations, annotations -> Void in
+        parse.getStudentLocations(errorCompletionHandler) { locations, annotations -> Void in
             
-            self.user!.locations = locations
-            self.user!.annotations = annotations
+            StudentData.locations = locations
+            StudentData.annotations = annotations
             
             performUIUpdatesOnMain {
-                self.mapView.addAnnotations(self.user!.annotations!)
+                self.mapView.addAnnotations(StudentData.annotations!)
                 self.spinner.stopAnimating()
             }
         }
     }
     
-    override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
-        if segue.identifier == "toInfoPostingSegue" {
-            let nextScene =  segue.destinationViewController as! InformationPostingViewController
-            nextScene.user = user
-        }
+    func errorCompletionHandler() {
+        spinner.stopAnimating()
     }
+    
 }
 
 extension MapViewController {
-    
-    func displayAlert(alertMessage: String) {
-        let alertController = UIAlertController(title: "Error", message: alertMessage, preferredStyle: UIAlertControllerStyle.Alert)
-        
-        alertController.addAction(UIAlertAction(title: "Dismiss", style: UIAlertActionStyle.Default, handler: nil ))
-        
-        self.presentViewController(alertController, animated: true, completion: nil)
-    }
     
     // MARK: - MKMapViewDelegate
     
