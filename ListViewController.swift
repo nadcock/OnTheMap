@@ -16,21 +16,15 @@ class ListViewCell: UITableViewCell {
 
 class ListViewController: UITableViewController {
     
-    var user: StudentInforamion?
     let parse = Parse()
     
     //let appDelegate = UIApplication.sharedApplication().delegate as! AppDelegate
     
-    override func viewDidLoad() {
-        let tbController =  self.tabBarController! as UITabBarController
-        let mapNavViewController = tbController.viewControllers![0] as! UINavigationController
-        let mapVC = mapNavViewController.viewControllers[0] as! MapViewController
-        user = mapVC.user
-    }
-    
-    override func viewDidAppear(animated: Bool) {
+    override func viewWillAppear(animated: Bool) {
+        refresh(UIBarButtonItem())
         tableView.reloadData()
     }
+    
     
     override func numberOfSectionsInTableView(tableView: UITableView) -> Int {
         // Return the number of sections.
@@ -38,11 +32,14 @@ class ListViewController: UITableViewController {
     }
     
     override func tableView(tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return user!.annotations!.count
+        guard let annotations = StudentData.annotations else {
+            return 0
+        }
+        return annotations.count
     }
     
     override func tableView(tableView: UITableView, didSelectRowAtIndexPath indexPath: NSIndexPath) {
-        let mediaURL = user!.locations![indexPath.row].mediaURL
+        let mediaURL = StudentData.locations![indexPath.row].mediaURL
         
         if let url = NSURL(string: mediaURL) {
             UIApplication.sharedApplication().openURL(url)
@@ -51,7 +48,7 @@ class ListViewController: UITableViewController {
     override func tableView(tableView: UITableView, cellForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCell {
         let cell:ListViewCell = self.tableView.dequeueReusableCellWithIdentifier("ListViewCell") as! ListViewCell
         
-        let nameString = "\(user!.locations![indexPath.row].firstName) \(user!.locations![indexPath.row].lastName)"
+        let nameString = "\(StudentData.locations![indexPath.row].firstName) \(StudentData.locations![indexPath.row].lastName)"
         
         print(nameString)
         
@@ -61,7 +58,7 @@ class ListViewController: UITableViewController {
     }
     
     @IBAction func logoutTapped(sender: AnyObject) {
-        parse.logout(completionHandler: {
+        parse.logout({}, completionHandler: {
             
             performUIUpdatesOnMain {
                 let controller = self.storyboard!.instantiateViewControllerWithIdentifier("LoginViewController")
@@ -71,21 +68,14 @@ class ListViewController: UITableViewController {
     }
     
     @IBAction func refresh(sender: UIBarButtonItem) {
-        parse.getStudentLocations() { locations, annotations -> Void in
+        parse.getStudentLocations({}) { locations, annotations -> Void in
             
-            self.user!.locations = locations
-            self.user!.annotations = annotations
+            StudentData.locations = locations
+            StudentData.annotations = annotations
             
             performUIUpdatesOnMain {
                 self.tableView.reloadData()
             }
-        }
-    }
-    
-    override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
-        if segue.identifier == "toInfoPostingSegue" {
-            let nextScene =  segue.destinationViewController as! InformationPostingViewController
-            nextScene.user = user
         }
     }
     
