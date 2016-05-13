@@ -16,7 +16,17 @@ class ListViewCell: UITableViewCell {
 
 class ListViewController: UITableViewController {
     
-    let appDelegate = UIApplication.sharedApplication().delegate as! AppDelegate
+    var user: StudentInforamion?
+    let parse = Parse()
+    
+    //let appDelegate = UIApplication.sharedApplication().delegate as! AppDelegate
+    
+    override func viewDidLoad() {
+        let tbController =  self.tabBarController! as UITabBarController
+        let mapNavViewController = tbController.viewControllers![0] as! UINavigationController
+        let mapVC = mapNavViewController.viewControllers[0] as! MapViewController
+        user = mapVC.user
+    }
     
     override func viewDidAppear(animated: Bool) {
         tableView.reloadData()
@@ -28,11 +38,11 @@ class ListViewController: UITableViewController {
     }
     
     override func tableView(tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return appDelegate.parse.annotations.count
+        return user!.annotations!.count
     }
     
     override func tableView(tableView: UITableView, didSelectRowAtIndexPath indexPath: NSIndexPath) {
-        let mediaURL = appDelegate.parse.locations[indexPath.row].mediaURL
+        let mediaURL = user!.locations![indexPath.row].mediaURL
         
         if let url = NSURL(string: mediaURL) {
             UIApplication.sharedApplication().openURL(url)
@@ -41,7 +51,7 @@ class ListViewController: UITableViewController {
     override func tableView(tableView: UITableView, cellForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCell {
         let cell:ListViewCell = self.tableView.dequeueReusableCellWithIdentifier("ListViewCell") as! ListViewCell
         
-        let nameString = "\(appDelegate.parse.locations[indexPath.row].firstName) \(appDelegate.parse.locations[indexPath.row].lastName)"
+        let nameString = "\(user!.locations![indexPath.row].firstName) \(user!.locations![indexPath.row].lastName)"
         
         print(nameString)
         
@@ -51,19 +61,32 @@ class ListViewController: UITableViewController {
     }
     
     @IBAction func logoutTapped(sender: AnyObject) {
-        appDelegate.parse.logout(completionHandler: {
+        parse.logout(completionHandler: {
             
             performUIUpdatesOnMain {
-            let controller = self.storyboard!.instantiateViewControllerWithIdentifier("LoginViewController")
-            self.presentViewController(controller, animated: true, completion: nil)
+                let controller = self.storyboard!.instantiateViewControllerWithIdentifier("LoginViewController")
+                self.presentViewController(controller, animated: true, completion: nil)
             }
         })
     }
     
     @IBAction func refresh(sender: UIBarButtonItem) {
-        appDelegate.parse.getStudentLocations(completionHandler: {
-            self.tableView.reloadData()
-            })
+        parse.getStudentLocations() { locations, annotations -> Void in
+            
+            self.user!.locations = locations
+            self.user!.annotations = annotations
+            
+            performUIUpdatesOnMain {
+                self.tableView.reloadData()
+            }
+        }
+    }
+    
+    override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
+        if segue.identifier == "toInfoPostingSegue" {
+            let nextScene =  segue.destinationViewController as! InformationPostingViewController
+            nextScene.user = user
+        }
     }
     
 }

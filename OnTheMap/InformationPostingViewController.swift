@@ -12,9 +12,11 @@ import MapKit
 
 class InformationPostingViewController: UIViewController, UITextFieldDelegate  {
     
+    var user: StudentInforamion?
+    let parse = Parse()
+    
     let udacityBlue = UIColor(red: 22/220, green: 164/220, blue: 1.0, alpha: 1.0)
     let padding = UIEdgeInsets(top: 5, left: 15, bottom: 5, right: 15)
-    let appDelegate = UIApplication.sharedApplication().delegate as! AppDelegate
     var userLocation: MKAnnotation?
     
     @IBOutlet var topView: UIView!
@@ -57,16 +59,13 @@ class InformationPostingViewController: UIViewController, UITextFieldDelegate  {
                 if let placemark = placemarks?.first {
                     self.userLocation = MKPlacemark(placemark: placemark) as MKAnnotation
                     self.mapView.addAnnotation(self.userLocation!)
-                    
-                    // optionally you can set your own boundaries of the zoom
+
                     let span = MKCoordinateSpanMake(0.5, 0.5)
-                    
-                    // or use the current map zoom and just center the map
-                    // let span = mapView.region.span
-                    
-                    // now move the map
                     let region = MKCoordinateRegion(center: self.userLocation!.coordinate, span: span)
                     self.mapView.setRegion(region, animated: false)
+                    
+                    self.spinner.stopAnimating()
+                    self.switchUI()
                 } else {
                     print(error!)
                     let alert = UIAlertController(title: "Ooops...", message: "It looks like we could not find that location! Please try a different location.", preferredStyle: UIAlertControllerStyle.Alert)
@@ -77,59 +76,24 @@ class InformationPostingViewController: UIViewController, UITextFieldDelegate  {
                     return
                 }
             })
-            self.spinner.stopAnimating()
-            switchUI()
+            
         } else {
             let params = [
-                "uniqueKey" : self.appDelegate.userInfo.key!,
-                "firstName" : self.appDelegate.userInfo.firstName!,
-                "lastName"  : self.appDelegate.userInfo.lastName!,
+                "uniqueKey" : user!.key!,
+                "firstName" : user!.firstName!,
+                "lastName"  : user!.lastName!,
                 "mapString" : self.locaitonTextField.text!,
                 "mediaURL"  : self.urlTextField.text!,
                 "latitude"  : userLocation!.coordinate.latitude,
                 "longitude" : userLocation!.coordinate.longitude
             ]
             self.spinner.startAnimating()
-            
-            let request = NSMutableURLRequest(URL: NSURL(string: ParseConstants.ParseURL.BaseURL)!)
-            request.HTTPMethod = "POST"
-            request.addValue(ParseConstants.Values.ApplicationID, forHTTPHeaderField: ParseConstants.Keys.ApplicationID)
-            request.addValue(ParseConstants.Values.RestAPIKey, forHTTPHeaderField: ParseConstants.Keys.RestAPIKey)
-            request.addValue("application/json", forHTTPHeaderField: "Content-Type")
-            
-            do {
-                request.HTTPBody = try NSJSONSerialization.dataWithJSONObject(params, options: .PrettyPrinted)
-            } catch {
-                print("Could not parse datas JSON: \(request.HTTPBody!)")
-                return
-            }
-            
-            let parsed: AnyObject!
-            do {
-                parsed = try NSJSONSerialization.JSONObjectWithData(request.HTTPBody!, options: .AllowFragments)
-            } catch {
-                print("Could not parse datas JSON: \(request.HTTPBody!)")
-                return
-            }
-            
-            print("PARSED: \(parsed)")
-        
-    
-    
-            let session = NSURLSession.sharedSession()
-            let task = session.dataTaskWithRequest(request) { data, response, error in
-                if error != nil { // Handle error…
-                    return
+            parse.postLocation(params as! [String : AnyObject]) {
+                performUIUpdatesOnMain {
+                    self.spinner.stopAnimating()
+                    self.dismissViewControllerAnimated(true, completion: nil)
                 }
-                print(NSString(data: data!, encoding: NSUTF8StringEncoding))
             }
-            
-            performUIUpdatesOnMain {
-                self.spinner.stopAnimating()
-                self.dismissViewControllerAnimated(true, completion: nil)
-            }
-            
-            task.resume()
         }
     }
     
