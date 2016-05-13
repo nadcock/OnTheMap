@@ -24,6 +24,7 @@ struct UdacityConstants {
         
         // MARK: Session
         static let Session = "/session"
+        static let Users = "/users"
         
     }
     
@@ -39,6 +40,14 @@ struct UdacityConstants {
     // MARK: TMDB Parameter Values
     struct UdacityParameterValues {
         static let ApiKey = ""
+    }
+    
+    func buildSessionURL() -> String {
+        return "\(Udacity.ApiScheme)://\(Udacity.ApiHost)\(Udacity.ApiPath)\(Methods.Session)"
+    }
+    
+    func buildUsersURL() -> String {
+        return "\(Udacity.ApiScheme)://\(Udacity.ApiHost)\(Udacity.ApiPath)\(Methods.Users)"
     }
     
 }

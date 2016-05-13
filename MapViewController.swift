@@ -12,55 +12,56 @@ import MapKit
 
 class MapViewController: UIViewController, MKMapViewDelegate {
     
+    var user: StudentInforamion?
+    let parse = Parse()
+    
     @IBOutlet weak var mapView: MKMapView!
     @IBOutlet weak var logoutBarButton: UIBarButtonItem!
     @IBOutlet weak var pinBarButton: UIBarButtonItem!
     @IBOutlet weak var refreshBarButton: UIBarButtonItem!
     @IBOutlet weak var spinner: UIActivityIndicatorView!
     
-    
-    let appDelegate = UIApplication.sharedApplication().delegate as! AppDelegate
-    
     override func viewDidLoad() {
         self.spinner.hidesWhenStopped = true
         self.spinner.startAnimating()
         mapView.delegate = self
-
-        appDelegate.parse.getStudentLocations(completionHandler: {
-                
-            performUIUpdatesOnMain {
-                print("\nNumber of Annotations: \(self.appDelegate.parse.annotations.count)")
-                print("\n\n\n\nAdding Annotations: \(self.appDelegate.parse.annotations)\n\n\n")
-                self.mapView.addAnnotations(self.appDelegate.parse.annotations)
-                self.spinner.stopAnimating()
-            }
-        })
+        updateMap()
     }
     
     
     @IBAction func logoutTapped(sender: AnyObject) {
-        appDelegate.parse.logout(completionHandler: {
-            
+        parse.logout(){
             performUIUpdatesOnMain {
                 let controller = self.storyboard!.instantiateViewControllerWithIdentifier("LoginViewController")
                 self.presentViewController(controller, animated: true, completion: nil)
             }
-        })
+        }
     }
     
     @IBAction func refresh(sender: UIBarButtonItem) {
         self.spinner.startAnimating()
-        mapView.removeAnnotations(self.appDelegate.parse.annotations)
-        appDelegate.parse.getStudentLocations(completionHandler: {
+        mapView.removeAnnotations(self.user!.annotations!)
+        updateMap()
+    }
+    
+    func updateMap() {
+        parse.getStudentLocations() { locations, annotations -> Void in
+            
+            self.user!.locations = locations
+            self.user!.annotations = annotations
             
             performUIUpdatesOnMain {
-                
-                print("\nNumber of Annotations: \(self.appDelegate.parse.annotations.count)")
-                print("\n\n\n\nAdding Annotations: \(self.appDelegate.parse.annotations)\n\n\n")
-                self.mapView.addAnnotations(self.appDelegate.parse.annotations)
+                self.mapView.addAnnotations(self.user!.annotations!)
                 self.spinner.stopAnimating()
             }
-        })
+        }
+    }
+    
+    override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
+        if segue.identifier == "toInfoPostingSegue" {
+            let nextScene =  segue.destinationViewController as! InformationPostingViewController
+            nextScene.user = user
+        }
     }
 }
 

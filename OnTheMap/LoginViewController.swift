@@ -15,8 +15,8 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
     @IBOutlet weak var scrollView: UIScrollView!
     @IBOutlet weak var loginButton: UIButton!
     
-    let appDelegate = UIApplication.sharedApplication().delegate as! AppDelegate
-    
+    var user = StudentInforamion()
+    let udacity = Udacity()
     var keyboardPresent = false
     var activeField: UITextField?
     
@@ -25,14 +25,26 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
             displayAlert("Please enter a valid username and password")
         } else {
             setUIEnabled(false)
-            getSession(emailTextField.text!, password: passwordTextField.text!)
+            udacity.getSession(emailTextField.text!, password: passwordTextField.text!) {
+                (key: String, firstName: String, lastName: String, username: String) -> Void in
+                self.user.key = key
+                self.user.firstName = firstName
+                self.user.login = username
+                self.user.lastName = lastName
+                
+                self.completeLogin()
+            }
         }
     }
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        setUIEnabled(true)
         emailTextField.delegate = self
         passwordTextField.delegate = self
+        
+//        emailTextField.text = "nick@nicksemail.com"
+//        passwordTextField.text = "Na0coC77"
     }
 
     override func didReceiveMemoryWarning() {
@@ -42,6 +54,7 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
 
     override func viewWillAppear(animated: Bool) {
         registerForKeyboardNotifications()
+        self.setUIEnabled(true)
     }
     
     override func viewWillDisappear(animated: Bool) {
@@ -49,93 +62,24 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
         deregisterFromKeyboardNotifications()
     }
     
-    
-    
-    func getSession(username: String, password: String) -> Void {
-        let request = NSMutableURLRequest(URL: NSURL(string: "https://www.udacity.com/api/session")!)
-        request.HTTPMethod = "POST"
-        request.addValue("application/json", forHTTPHeaderField: "Accept")
-        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.HTTPBody = "{\"udacity\": {\"username\": \"\(username)\", \"password\": \"\(password)\"}}".dataUsingEncoding(NSUTF8StringEncoding)
-        let session = NSURLSession.sharedSession()
-        let task = session.dataTaskWithRequest(request) { data, response, error in
-            if error != nil { // Handle error…
-                self.displayAlert("There was an error with your request")
-                print(error)
-            }
-            
-            
-            guard let newData = data?.subdataWithRange(NSMakeRange(5, data!.length - 5)) /* subset response data! */ else {
-                self.displayAlert("There was an error with your request")
-                return
-            }
-            
-            let parsedResult: AnyObject!
-            do {
-                parsedResult = try NSJSONSerialization.JSONObjectWithData(newData, options: .AllowFragments)
-            } catch {
-                print("Could not parse datas JSON: \(data)")
-                return
-            }
-            
-            guard let results = parsedResult["account"] as? [String:AnyObject] else {
-                print("Could not find \"results\" in parsedResults:  \(parsedResult)")
-                return
-            }
-            
-            self.appDelegate.userInfo.key = results["key"] as? String
-            
-            self.getUserData()
-            self.completeLogin()
-        }
-        task.resume()
-    }
-    
-    func getUserData() {
-        let request = NSMutableURLRequest(URL: NSURL(string: "https://www.udacity.com/api/users/\(self.appDelegate.userInfo.key!)")!)
-        let session = NSURLSession.sharedSession()
-        let task = session.dataTaskWithRequest(request) { data, response, error in
-            if error != nil { // Handle error...
-                return
-            }
-            guard let newData = data?.subdataWithRange(NSMakeRange(5, data!.length - 5)) /* subset response data! */ else {
-                self.displayAlert("There was an error with your request")
-                return
-            }
-            
-            let parsedResult: AnyObject!
-            do {
-                parsedResult = try NSJSONSerialization.JSONObjectWithData(newData, options: .AllowFragments)
-            } catch {
-                print("Could not parse datas JSON: \(data)")
-                return
-            }
-            
-            guard let results = parsedResult["user"] as? [String:AnyObject] else {
-                print("Could not find \"results\" in parsedResults:  \(parsedResult)")
-                return
-            }
-            
-            self.appDelegate.userInfo.lastName = results["last_name"] as? String
-            self.appDelegate.userInfo.firstName = results["first_name"] as? String
-            
-
-        }
-        task.resume()
-    }
-    
     func displayAlert(alertMessage: String) {
         let alertController = UIAlertController(title: "Error", message: alertMessage, preferredStyle: UIAlertControllerStyle.Alert)
-        
         alertController.addAction(UIAlertAction(title: "Dismiss", style: UIAlertActionStyle.Default, handler: nil ))
-        
         self.presentViewController(alertController, animated: true, completion: nil)
+    }
+    
+    override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
+        if segue.identifier == "TabBarControllerSegue" {
+            let nextScene =  segue.destinationViewController as! UITabBarController
+            let mapNavViewController = nextScene.viewControllers![0] as! UINavigationController
+            let mapVC = mapNavViewController.viewControllers[0] as! MapViewController
+            mapVC.user = user
+        }
     }
     
     private func completeLogin() {
         performUIUpdatesOnMain {
-            let controller = self.storyboard!.instantiateViewControllerWithIdentifier("mapNavigationViewController") as! UITabBarController
-            self.presentViewController(controller, animated: true, completion: nil)
+            self.performSegueWithIdentifier("TabBarControllerSegue", sender: self)
         }
     }
     
@@ -177,7 +121,6 @@ extension LoginViewController {
                 self.scrollView.scrollRectToVisible(activeField!.frame, animated: true)
             }
         }
-        
     }
     
     
@@ -190,7 +133,6 @@ extension LoginViewController {
         self.scrollView.scrollIndicatorInsets = contentInsets
         self.view.endEditing(true)
         self.scrollView.scrollEnabled = false
-        
     }
     
     func textFieldDidBeginEditing(textField: UITextField) {
@@ -199,6 +141,7 @@ extension LoginViewController {
     
     func textFieldDidEndEditing(textField: UITextField) {
         activeField = nil
+
     }
     
     func textFieldShouldReturn(textField: UITextField) -> Bool {
@@ -212,7 +155,9 @@ extension LoginViewController {
     
     private func setUIEnabled(enabled: Bool) {
         emailTextField.enabled = enabled
+        print("emailTextField.enabled = \(emailTextField.enabled)")
         passwordTextField.enabled = enabled
+        print("passwordTextField.enabled = \(passwordTextField.enabled)")
         loginButton?.enabled = enabled
      
         // adjust login button alpha
