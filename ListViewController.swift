@@ -16,10 +16,6 @@ class ListViewCell: UITableViewCell {
 
 class ListViewController: UITableViewController {
     
-    let parse = Parse()
-    
-    //let appDelegate = UIApplication.sharedApplication().delegate as! AppDelegate
-    
     override func viewWillAppear(animated: Bool) {
         refresh(UIBarButtonItem())
         tableView.reloadData()
@@ -58,7 +54,7 @@ class ListViewController: UITableViewController {
     }
     
     @IBAction func logoutTapped(sender: AnyObject) {
-        parse.logout({}, completionHandler: {
+        Parse.logout({}, completionHandler: {
             
             performUIUpdatesOnMain {
                 let controller = self.storyboard!.instantiateViewControllerWithIdentifier("LoginViewController")
@@ -68,7 +64,7 @@ class ListViewController: UITableViewController {
     }
     
     @IBAction func refresh(sender: UIBarButtonItem) {
-        parse.getStudentLocations({}) { locations, annotations -> Void in
+        Parse.getStudentLocations({}) { locations, annotations -> Void in
             
             StudentData.locations = locations
             StudentData.annotations = annotations

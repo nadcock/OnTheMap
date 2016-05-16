@@ -42,11 +42,11 @@ struct UdacityConstants {
         static let ApiKey = ""
     }
     
-    func buildSessionURL() -> String {
+    static func buildSessionURL() -> String {
         return "\(Udacity.ApiScheme)://\(Udacity.ApiHost)\(Udacity.ApiPath)\(Methods.Session)"
     }
     
-    func buildUsersURL() -> String {
+    static func buildUsersURL() -> String {
         return "\(Udacity.ApiScheme)://\(Udacity.ApiHost)\(Udacity.ApiPath)\(Methods.Users)"
     }
     

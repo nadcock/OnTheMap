@@ -12,8 +12,6 @@ import MapKit
 
 class InformationPostingViewController: UIViewController, UITextFieldDelegate  {
     
-    let parse = Parse()
-    
     let udacityBlue = UIColor(red: 22/220, green: 164/220, blue: 1.0, alpha: 1.0)
     let padding = UIEdgeInsets(top: 5, left: 15, bottom: 5, right: 15)
     var userLocation: MKAnnotation?
@@ -87,7 +85,7 @@ class InformationPostingViewController: UIViewController, UITextFieldDelegate  {
                 "longitude" : userLocation!.coordinate.longitude
             ]
             self.spinner.startAnimating()
-            parse.postLocation(params as! [String : AnyObject], errorHandler: errorCompletionHandler) {
+            Parse.postLocation(params as! [String : AnyObject], errorHandler: errorCompletionHandler) {
                 performUIUpdatesOnMain {
                     self.spinner.stopAnimating()
                     self.dismissViewControllerAnimated(true, completion: nil)
