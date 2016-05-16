@@ -15,9 +15,7 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
     @IBOutlet var passwordTextField: LoginTextField!
     @IBOutlet var loginButton: UIButton!
     @IBOutlet var scrollView: UIScrollView!
-    
-    
-    let udacity = Udacity()
+
     var keyboardPresent = false
     var activeField: UITextField?
     
@@ -30,7 +28,7 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
         if emailTextField.text!.isEmpty || passwordTextField.text!.isEmpty {
             displayAlert("Please enter a valid username and password")
         } else {
-            udacity.getSession(emailTextField.text!, password: passwordTextField.text!, errorHandler: errorHandler) {
+            Udacity.getSession(emailTextField.text!, password: passwordTextField.text!, errorHandler: errorHandler) {
                 (key: String, firstName: String, lastName: String, username: String) -> Void in
                 StudentData.key = key
                 StudentData.firstName = firstName
@@ -94,12 +92,12 @@ extension LoginViewController {
     
     
     func deregisterFromKeyboardNotifications() {
-        //Removing notifies on keyboard appearing
-        NSNotificationCenter.defaultCenter().removeObserver(self, name: UIKeyboardWillShowNotification, object: nil)
+        NSNotificationCenter.defaultCenter().removeObserver(self, name: UIKeyboardDidShowNotification, object: nil)
         NSNotificationCenter.defaultCenter().removeObserver(self, name: UIKeyboardWillHideNotification, object: nil)
     }
     
     func keyboardWasShown(notification: NSNotification) {
+        print("keyboardWasShown")
         //Need to calculate keyboard exact size due to Apple suggestions
         self.scrollView.scrollEnabled = true
         let info : NSDictionary = notification.userInfo!
@@ -122,13 +120,14 @@ extension LoginViewController {
     
     
     func keyboardWillBeHidden(notification: NSNotification) {
+        print("keyboardWillBeHidden")
         //Once keyboard disappears, restore original positions
         let info : NSDictionary = notification.userInfo!
         let keyboardSize = (info[UIKeyboardFrameBeginUserInfoKey] as? NSValue)?.CGRectValue().size
         let contentInsets : UIEdgeInsets = UIEdgeInsetsMake(0.0, 0.0, -keyboardSize!.height - 10.0, 0.0)
         self.scrollView.contentInset = contentInsets
         self.scrollView.scrollIndicatorInsets = contentInsets
-        self.activeField?.resignFirstResponder()
+        //self.activeField?.resignFirstResponder()
         self.scrollView.scrollEnabled = false
     }
     
@@ -142,6 +141,7 @@ extension LoginViewController {
     }
     
     func textFieldShouldReturn(textField: UITextField) -> Bool {
+        print("textFieldShouldReturn")
         textField.resignFirstResponder()
         if textField.isEqual(passwordTextField) {
             self.loginTapped(loginButton)
@@ -155,10 +155,8 @@ extension LoginViewController {
     
     private func setUIEnabled(enabled: Bool) {
         emailTextField.userInteractionEnabled = enabled
-        //emailTextField.enabled = enabled
         print("emailTextField.enabled = \(emailTextField.enabled)")
         passwordTextField.userInteractionEnabled = enabled
-        //passwordTextField.enabled = enabled
         print("passwordTextField.enabled = \(passwordTextField.enabled)")
         loginButton?.enabled = enabled
      

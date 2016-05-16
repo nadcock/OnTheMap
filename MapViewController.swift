@@ -12,8 +12,6 @@ import MapKit
 
 class MapViewController: UIViewController, MKMapViewDelegate {
     
-    let parse = Parse()
-    
     @IBOutlet weak var mapView: MKMapView!
     @IBOutlet weak var logoutBarButton: UIBarButtonItem!
     @IBOutlet weak var pinBarButton: UIBarButtonItem!
@@ -33,7 +31,7 @@ class MapViewController: UIViewController, MKMapViewDelegate {
     
     
     @IBAction func logoutTapped(sender: AnyObject) {
-        parse.logout({}){
+        Parse.logout({}){
             performUIUpdatesOnMain {
                 let controller = self.storyboard!.instantiateViewControllerWithIdentifier("LoginViewController")
                 self.presentViewController(controller, animated: true, completion: nil)
@@ -51,7 +49,7 @@ class MapViewController: UIViewController, MKMapViewDelegate {
     
     
     func updateMap() {
-        parse.getStudentLocations(errorCompletionHandler) { locations, annotations -> Void in
+        Parse.getStudentLocations(errorCompletionHandler) { locations, annotations -> Void in
             
             StudentData.locations = locations
             StudentData.annotations = annotations
@@ -85,7 +83,7 @@ extension MapViewController {
         if pinView == nil {
             pinView = MKPinAnnotationView(annotation: annotation, reuseIdentifier: reuseId)
             pinView!.canShowCallout = true
-            pinView!.pinColor = .Red
+            pinView!.pinTintColor = .redColor()
             pinView!.rightCalloutAccessoryView = UIButton(type: .DetailDisclosure)
         }
         else {

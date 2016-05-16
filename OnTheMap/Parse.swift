@@ -12,7 +12,7 @@ import MapKit
 
 class Parse: NSObject {
 
-    func getStudentLocations(errorHandler: (Void) -> Void, completionHandler handler: ([StudentInformation], [MKPointAnnotation]) -> Void) {
+    static func getStudentLocations(errorHandler: (Void) -> Void, completionHandler handler: ([StudentInformation], [MKPointAnnotation]) -> Void) {
         let request = NSMutableURLRequest(URL: NSURL(string: "\(ParseConstants.ParseURL.BaseURL)?\(ParseConstants.MethodsKeys.Order.baseMethod)=\(ParseConstants.MethodsKeys.Order.option)")!)
         request.addValue(ParseConstants.Values.ApplicationID, forHTTPHeaderField: ParseConstants.Keys.ApplicationID)
         request.addValue(ParseConstants.Values.RestAPIKey, forHTTPHeaderField: ParseConstants.Keys.RestAPIKey)
@@ -52,7 +52,7 @@ class Parse: NSObject {
         task.resume()
     }
     
-    func setAnnotations(locations: [StudentInformation], completionHandler handler: ([StudentInformation], [MKPointAnnotation]) -> Void ) {
+    static func setAnnotations(locations: [StudentInformation], completionHandler handler: ([StudentInformation], [MKPointAnnotation]) -> Void ) {
         dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0)){
             let annotations = StudentInformation.annotaionsFromLocations(locations)
     
@@ -60,8 +60,8 @@ class Parse: NSObject {
         }
     }
     
-    func logout(errorHandler: (Void) -> Void, completionHandler handler: (Void) -> Void) {
-        let request = NSMutableURLRequest(URL: NSURL(string: UdacityConstants().buildSessionURL())!)
+    static func logout(errorHandler: (Void) -> Void, completionHandler handler: (Void) -> Void) {
+        let request = NSMutableURLRequest(URL: NSURL(string: UdacityConstants.buildSessionURL())!)
         request.HTTPMethod = "DELETE"
         var xsrfCookie: NSHTTPCookie? = nil
         let sharedCookieStorage = NSHTTPCookieStorage.sharedHTTPCookieStorage()
@@ -100,7 +100,7 @@ class Parse: NSObject {
         task.resume()
     }
     
-    func postLocation(params: [String:AnyObject], errorHandler: (Void) -> Void, completionHandler handler: Void -> Void) {
+    static func postLocation(params: [String:AnyObject], errorHandler: (Void) -> Void, completionHandler handler: Void -> Void) {
         let request = NSMutableURLRequest(URL: NSURL(string: ParseConstants.ParseURL.BaseURL)!)
         request.HTTPMethod = "POST"
         request.addValue(ParseConstants.Values.ApplicationID, forHTTPHeaderField: ParseConstants.Keys.ApplicationID)
@@ -129,7 +129,7 @@ class Parse: NSObject {
 
     }
     
-    func displayAlert(alertMessage: String, completionHandler handler: (Void) -> Void) {
+    static func displayAlert(alertMessage: String, completionHandler handler: (Void) -> Void) {
         performUIUpdatesOnMain {
             let alertController = DBAlertController(title: "Error", message: alertMessage, preferredStyle: UIAlertControllerStyle.Alert)
             alertController.addAction(UIAlertAction(title: "Dismiss", style: UIAlertActionStyle.Default) {

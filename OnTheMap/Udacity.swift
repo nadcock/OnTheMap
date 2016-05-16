@@ -10,12 +10,10 @@ import Foundation
 import UIKit
 
 class Udacity {
-    let uconst = UdacityConstants()
     
-    func getSession(username: String, password: String, errorHandler: Void -> Void, completionHandler handler: (String, String, String, String) -> Void) -> Void {
+    static func getSession(username: String, password: String, errorHandler: Void -> Void, completionHandler handler: (String, String, String, String) -> Void) -> Void {
         
-        let request = NSMutableURLRequest(URL: NSURL(string: uconst.buildSessionURL())!)
-        print("\(uconst.buildSessionURL())")
+        let request = NSMutableURLRequest(URL: NSURL(string: UdacityConstants.buildSessionURL())!)
         request.HTTPMethod = "POST"
         request.addValue("application/json", forHTTPHeaderField: "Accept")
         request.addValue("application/json", forHTTPHeaderField: "Content-Type")
@@ -63,8 +61,8 @@ class Udacity {
         task.resume()
     }
     
-    func getUserData(key: String, username: String, errorHandler: Void -> Void, completionHandler handler: (String, String, String, String) -> Void) {
-        let request = NSMutableURLRequest(URL: NSURL(string: "\(uconst.buildUsersURL())/\(key)")!)
+    static func getUserData(key: String, username: String, errorHandler: Void -> Void, completionHandler handler: (String, String, String, String) -> Void) {
+        let request = NSMutableURLRequest(URL: NSURL(string: "\(UdacityConstants.buildUsersURL())/\(key)")!)
         let session = NSURLSession.sharedSession()
         let task = session.dataTaskWithRequest(request) { data, response, error in
             if error != nil { // Handle error...
@@ -110,7 +108,7 @@ class Udacity {
         task.resume()
     }
 
-    func displayAlert(alertMessage: String, completionHandler handler: (Void) -> Void) {
+    static func displayAlert(alertMessage: String, completionHandler handler: (Void) -> Void) {
         performUIUpdatesOnMain {
             let alertController = DBAlertController(title: "Error", message: alertMessage, preferredStyle: UIAlertControllerStyle.Alert)
             alertController.addAction(UIAlertAction(title: "Dismiss", style: UIAlertActionStyle.Default) {
