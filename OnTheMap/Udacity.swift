@@ -23,6 +23,7 @@ class Udacity {
             if error != nil { // Handle error…
                 self.displayAlert((error?.localizedDescription)!, completionHandler: errorHandler)
                 print(error)
+                return
             }
             
             

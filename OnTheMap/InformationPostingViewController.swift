@@ -76,9 +76,9 @@ class InformationPostingViewController: UIViewController, UITextFieldDelegate  {
             
         } else {
             let params = [
-                "uniqueKey" : StudentData.key!,
-                "firstName" : StudentData.firstName!,
-                "lastName"  : StudentData.lastName!,
+                "uniqueKey" : StudentData.sharedInstance.key!,
+                "firstName" : StudentData.sharedInstance.firstName!,
+                "lastName"  : StudentData.sharedInstance.lastName!,
                 "mapString" : self.locaitonTextField.text!,
                 "mediaURL"  : self.urlTextField.text!,
                 "latitude"  : userLocation!.coordinate.latitude,

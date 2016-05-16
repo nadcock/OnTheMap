@@ -41,7 +41,7 @@ class MapViewController: UIViewController, MKMapViewDelegate {
     
     @IBAction func refresh(sender: UIBarButtonItem) {
         self.spinner.startAnimating()
-        if let annotations = StudentData.annotations {
+        if let annotations = StudentData.sharedInstance.annotations {
             self.mapView.removeAnnotations((annotations))
         }
         updateMap()
@@ -51,11 +51,11 @@ class MapViewController: UIViewController, MKMapViewDelegate {
     func updateMap() {
         Parse.getStudentLocations(errorCompletionHandler) { locations, annotations -> Void in
             
-            StudentData.locations = locations
-            StudentData.annotations = annotations
+            StudentData.sharedInstance.locations = locations
+            StudentData.sharedInstance.annotations = annotations
             
             performUIUpdatesOnMain {
-                self.mapView.addAnnotations(StudentData.annotations!)
+                self.mapView.addAnnotations(StudentData.sharedInstance.annotations!)
                 self.spinner.stopAnimating()
             }
         }

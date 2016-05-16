@@ -28,14 +28,14 @@ class ListViewController: UITableViewController {
     }
     
     override func tableView(tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        guard let annotations = StudentData.annotations else {
+        guard let annotations = StudentData.sharedInstance.annotations else {
             return 0
         }
         return annotations.count
     }
     
     override func tableView(tableView: UITableView, didSelectRowAtIndexPath indexPath: NSIndexPath) {
-        let mediaURL = StudentData.locations![indexPath.row].mediaURL
+        let mediaURL = StudentData.sharedInstance.locations![indexPath.row].mediaURL
         
         if let url = NSURL(string: mediaURL) {
             UIApplication.sharedApplication().openURL(url)
@@ -44,7 +44,7 @@ class ListViewController: UITableViewController {
     override func tableView(tableView: UITableView, cellForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCell {
         let cell:ListViewCell = self.tableView.dequeueReusableCellWithIdentifier("ListViewCell") as! ListViewCell
         
-        let nameString = "\(StudentData.locations![indexPath.row].firstName) \(StudentData.locations![indexPath.row].lastName)"
+        let nameString = "\(StudentData.sharedInstance.locations![indexPath.row].firstName) \(StudentData.sharedInstance.locations![indexPath.row].lastName)"
         
         print(nameString)
         
@@ -66,8 +66,8 @@ class ListViewController: UITableViewController {
     @IBAction func refresh(sender: UIBarButtonItem) {
         Parse.getStudentLocations({}) { locations, annotations -> Void in
             
-            StudentData.locations = locations
-            StudentData.annotations = annotations
+            StudentData.sharedInstance.locations = locations
+            StudentData.sharedInstance.annotations = annotations
             
             performUIUpdatesOnMain {
                 self.tableView.reloadData()

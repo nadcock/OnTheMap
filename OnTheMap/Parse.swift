@@ -13,7 +13,7 @@ import MapKit
 class Parse: NSObject {
 
     static func getStudentLocations(errorHandler: (Void) -> Void, completionHandler handler: ([StudentInformation], [MKPointAnnotation]) -> Void) {
-        let request = NSMutableURLRequest(URL: NSURL(string: "\(ParseConstants.ParseURL.BaseURL)?\(ParseConstants.MethodsKeys.Order.baseMethod)=\(ParseConstants.MethodsKeys.Order.option)")!)
+        let request = NSMutableURLRequest(URL: NSURL(string: "\(ParseConstants.ParseURL.BaseURL)?\(ParseConstants.MethodsKeys.Order.baseMethod)=\(ParseConstants.MethodsKeys.Order.option)&\(ParseConstants.MethodsKeys.Limit)=100")!)
         request.addValue(ParseConstants.Values.ApplicationID, forHTTPHeaderField: ParseConstants.Keys.ApplicationID)
         request.addValue(ParseConstants.Values.RestAPIKey, forHTTPHeaderField: ParseConstants.Keys.RestAPIKey)
         let session = NSURLSession.sharedSession()

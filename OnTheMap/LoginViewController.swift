@@ -30,10 +30,10 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
         } else {
             Udacity.getSession(emailTextField.text!, password: passwordTextField.text!, errorHandler: errorHandler) {
                 (key: String, firstName: String, lastName: String, username: String) -> Void in
-                StudentData.key = key
-                StudentData.firstName = firstName
-                StudentData.login = username
-                StudentData.lastName = lastName
+                StudentData.sharedInstance.key = key
+                StudentData.sharedInstance.firstName = firstName
+                StudentData.sharedInstance.login = username
+                StudentData.sharedInstance.lastName = lastName
                 
                 self.completeLogin()
             }
