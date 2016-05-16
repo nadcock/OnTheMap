@@ -10,10 +10,12 @@ import Foundation
 import MapKit
 
 class StudentData {
-    static var login: String?
-    static var firstName: String?
-    static var lastName: String?
-    static var key: String?
-    static var locations: [StudentInformation]?
-    static var annotations: [MKPointAnnotation]?
+    var login: String?
+    var firstName: String?
+    var lastName: String?
+    var key: String?
+    var locations: [StudentInformation]?
+    var annotations: [MKPointAnnotation]?
+    
+    static let sharedInstance = StudentData()
 }
