@@ -46,8 +46,6 @@ class ListViewController: UITableViewController {
         
         let nameString = "\(StudentData.sharedInstance.locations![indexPath.row].firstName) \(StudentData.sharedInstance.locations![indexPath.row].lastName)"
         
-        print(nameString)
-        
         cell.nameLabel.text = nameString
         
         return cell
