@@ -55,7 +55,6 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
 
     override func viewWillAppear(animated: Bool) {
         registerForKeyboardNotifications()
-        print("ViewWillAppear Called")
         self.setUIEnabled(true)
     }
     
@@ -97,7 +96,6 @@ extension LoginViewController {
     }
     
     func keyboardWasShown(notification: NSNotification) {
-        print("keyboardWasShown")
         //Need to calculate keyboard exact size due to Apple suggestions
         self.scrollView.scrollEnabled = true
         let info : NSDictionary = notification.userInfo!
@@ -120,14 +118,12 @@ extension LoginViewController {
     
     
     func keyboardWillBeHidden(notification: NSNotification) {
-        print("keyboardWillBeHidden")
         //Once keyboard disappears, restore original positions
         let info : NSDictionary = notification.userInfo!
         let keyboardSize = (info[UIKeyboardFrameBeginUserInfoKey] as? NSValue)?.CGRectValue().size
         let contentInsets : UIEdgeInsets = UIEdgeInsetsMake(0.0, 0.0, -keyboardSize!.height - 10.0, 0.0)
         self.scrollView.contentInset = contentInsets
         self.scrollView.scrollIndicatorInsets = contentInsets
-        //self.activeField?.resignFirstResponder()
         self.scrollView.scrollEnabled = false
     }
     
@@ -141,7 +137,6 @@ extension LoginViewController {
     }
     
     func textFieldShouldReturn(textField: UITextField) -> Bool {
-        print("textFieldShouldReturn")
         textField.resignFirstResponder()
         if textField.isEqual(passwordTextField) {
             self.loginTapped(loginButton)
@@ -155,9 +150,7 @@ extension LoginViewController {
     
     private func setUIEnabled(enabled: Bool) {
         emailTextField.userInteractionEnabled = enabled
-        print("emailTextField.enabled = \(emailTextField.enabled)")
         passwordTextField.userInteractionEnabled = enabled
-        print("passwordTextField.enabled = \(passwordTextField.enabled)")
         loginButton?.enabled = enabled
      
         // adjust login button alpha
